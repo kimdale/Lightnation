@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LightNation • Quote Builder (Internal • XCD)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --text:#e5e7eb; --muted:#9ca3af; --blue:#0ea5e9;
+      --red:#ef4444; --green:#22c55e; --amber:#f59e0b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:radial-gradient(1200px 800px at 20% 10%, #0b2a45 0%, var(--bg) 55%) fixed;color:var(--text);}
+    header{padding:18px 18px 10px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.18);backdrop-filter:blur(6px);position:sticky;top:0;z-index:5;}
+    .brand{display:flex;align-items:center;gap:12px;}
+    .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg, rgba(14,165,233,.9), rgba(14,165,233,.2));box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 12px 30px rgba(14,165,233,.18);}
+    h1{font-size:18px;margin:0;letter-spacing:.4px}
+    .tag{margin:3px 0 0;color:var(--muted);font-size:12px}
+    main{padding:18px;max-width:1320px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:420px 1fr;gap:14px;}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:14px;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+    .card h2{font-size:13px;margin:0 0 10px;color:#dbeafe;letter-spacing:.3px;display:flex;align-items:center;justify-content:space-between;}
+    .row{display:flex;gap:10px;margin:10px 0;align-items:center}
+    label{font-size:12px;color:var(--muted);width:190px}
+    input,select{width:100%;padding:10px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);color:var(--text);outline:none;}
+    input:focus,select:focus{border-color:rgba(14,165,233,.55);box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+    input[disabled]{opacity:.55; cursor:not-allowed}
+    .pill{font-family:var(--mono);font-size:12px;padding:6px 9px;border-radius:999px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.25);color:#dbeafe;white-space:nowrap;}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .stat{padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);}
+    .stat .k{color:var(--muted);font-size:11px}
+    .stat .v{font-family:var(--mono);font-size:15px;margin-top:6px}
+    .v.ok{color:var(--green)} .v.bad{color:var(--red)} .v.warn{color:var(--amber)}
+    .table-wrap{overflow:auto;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
+    table{width:100%;border-collapse:collapse;min-width:1100px;background:rgba(0,0,0,.14);}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;vertical-align:middle;}
+    th{position:sticky;top:0;background:rgba(17,24,39,.88);backdrop-filter:blur(6px);color:#dbeafe;text-align:left;z-index:2;}
+    td.num{font-family:var(--mono);text-align:right} td.center{text-align:center} td small{color:var(--muted)}
+    .qty{width:76px;text-align:center;font-family:var(--mono);padding:8px}
+    .mini{width:92px;text-align:center;font-family:var(--mono);padding:8px}
+    .chip{display:inline-block;font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#e5e7eb;margin-right:6px;margin-bottom:4px;}
+    .chip.premium{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.28);color:#fde68a}
+    .chip.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.22);color:#bbf7d0}
+    .btnbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(14,165,233,.18);color:#e0f2fe;cursor:pointer;font-weight:600;}
+    button.secondary{background:rgba(255,255,255,.06);color:var(--text)} button.danger{background:rgba(239,68,68,.15);color:#fee2e2}
+    button:hover{filter:brightness(1.06)}
+    .note{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.35;}
+    .foot{color:var(--muted);font-size:11px;margin-top:14px}
+    .rightcol h2 span{color:var(--muted);font-size:11px;font-weight:500}
+    .divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0}
+
+    /* Quote page */
+    .quoteShell{max-width:900px;margin:0 auto}
+    .quoteHeader{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start}
+    .quoteTitle{font-size:18px;margin:0}
+    .quoteMeta{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.5}
+    .quoteGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    @media (max-width:720px){.quoteGrid{grid-template-columns:1fr}}
+    .quoteBox{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18);border-radius:14px;padding:12px}
+    .quoteBox .k{color:var(--muted);font-size:11px}
+    .quoteBox .v{font-family:var(--mono);font-size:18px;margin-top:6px}
+    .quoteTable{min-width:0;width:100%}
+    .quoteTable th{position:static}
+    .quoteActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    @media print{
+      header{position:static}
+      .noPrint{display:none !important}
+      body{background:#fff;color:#000}
+      .card{box-shadow:none}
+      .quoteBox{background:#fff}
+      th,td{color:#000}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div>
+      <h1>LightNation • Quote Builder <span class="pill">Internal</span> <span class="pill">XCD</span></h1>
+      <div class="tag">Exact inventory per fixture/model • Fit-to-Budget scaling • Direct Cost Calculator • Single-page quote view</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- BUILDER VIEW -->
+  <div id="builderView">
+    <div class="grid">
+      <section class="card">
+        <h2>Inputs <span class="pill" id="tierPill">Tier: —</span></h2>
+
+        <div class="row"><label>Client</label><input id="clientName" placeholder="Client name (optional)" /></div>
+        <div class="row"><label>Event Type</label><input id="eventType" placeholder="Wedding / Pageant / Concert / etc." /></div>
+
+        <div class="row"><label>Client Budget (XCD)</label><input id="budget" type="number" min="0" step="1" value="900" /></div>
+
+        <div class="row"><label>Direct Costs Mode</label>
+          <select id="costMode">
+            <option value="CALC" selected>Calculator</option>
+            <option value="MANUAL">Manual</option>
+          </select>
+        </div>
+
+        <div class="row"><label>Direct Costs (XCD)</label><input id="costs" type="number" min="0" step="1" value="700" /></div>
+
+        <div class="divider"></div>
+
+        <h2>Direct Cost Calculator <span class="pill" id="dcTotalPill">Total: $0</span></h2>
+
+        <div class="row"><label>Assistant Techs (count)</label><input id="dcAssistCount" type="number" min="0" step="1" value="1" /></div>
+        <div class="row"><label>Assistant Rate (XCD)</label><input id="dcAssistRate" type="number" min="0" step="1" value="300" /></div>
+
+        <div class="row"><label>Operator / Programmer (XCD)</label><input id="dcOperator" type="number" min="0" step="1" value="0" /></div>
+        <div class="row"><label>Fuel / Transport (XCD)</label><input id="dcFuel" type="number" min="0" step="1" value="200" /></div>
+        <div class="row"><label>Consumables (tape/fluid/etc) (XCD)</label><input id="dcConsumables" type="number" min="0" step="1" value="80" /></div>
+        <div class="row"><label>Sub-rentals (XCD)</label><input id="dcRentals" type="number" min="0" step="1" value="0" /></div>
+        <div class="row"><label>Damage/Maintenance Reserve (XCD)</label><input id="dcMaint" type="number" min="0" step="1" value="120" /></div>
+        <div class="row"><label>Misc (XCD)</label><input id="dcMisc" type="number" min="0" step="1" value="0" /></div>
+
+        <div class="divider"></div>
+
+        <div class="row"><label>Fit-to-Budget Mode</label>
+          <select id="fitMode"><option value="YES" selected>YES</option><option value="NO">NO</option></select>
+        </div>
+
+        <div class="row"><label>Scaling Target</label>
+          <select id="target"><option value="BUILD" selected>Build Budget</option><option value="CLIENT">Client Budget</option></select>
+        </div>
+
+        <div class="row"><label>Tier Override</label>
+          <select id="tierOverride"><option value="AUTO" selected>Auto</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select>
+        </div>
+
+        <div class="row"><label>Edit rates/avail</label>
+          <select id="editMode"><option value="NO" selected>NO</option><option value="YES">YES</option></select>
+        </div>
+
+        <div class="summary">
+          <div class="stat"><div class="k">Operating Reserve</div><div class="v" id="reserve">$0</div></div>
+          <div class="stat"><div class="k">Build Budget</div><div class="v" id="buildBudget">$0</div></div>
+          <div class="stat"><div class="k">Quote Total</div><div class="v" id="quoteTotal">$0</div></div>
+          <div class="stat"><div class="k">Profit</div><div class="v" id="profit">$0</div></div>
+          <div class="stat"><div class="k">Margin</div><div class="v" id="margin">0%</div></div>
+          <div class="stat"><div class="k">Status</div><div class="v" id="status">—</div></div>
+        </div>
+
+        <div class="btnbar noPrint">
+          <button id="quoteBtn">View Single-Page Quote</button>
+          <button id="resetBtn" class="secondary">Reset quantities</button>
+          <button id="logBtn">Log event to tracker</button>
+          <button id="exportBtn" class="secondary">Export quote JSON</button>
+          <button id="resetRatesBtn" class="secondary">Reset rates/avail</button>
+          <button id="clearLogBtn" class="danger">Clear tracker</button>
+        </div>
+
+        <div class="note">
+          <b>Direct costs</b> are event-specific cash out: crew, fuel, consumables, sub-rentals, per-show reserves. Overhead is not part of this calculator.
+        </div>
+
+        <div class="foot" id="trackerSummary">Tracker: 0 events logged</div>
+      </section>
+
+      <section class="card rightcol">
+        <h2>Fixture Plan <span>Final Qty is editable • Rate/Avail editable when Edit mode = YES</span></h2>
+
+        <div class="table-wrap">
+          <table id="fixtureTable">
+            <thead>
+              <tr>
+                <th style="min-width:130px">Category</th>
+                <th style="min-width:360px">Fixture</th>
+                <th class="num">Rate (XCD)</th>
+                <th class="center">Avail</th>
+                <th class="center">Suggested</th>
+                <th class="center">Final Qty</th>
+                <th class="num">Line Total (XCD)</th>
+                <th style="min-width:170px">Tags</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <h2>Event Profit Tracker <span>Saved in this browser</span></h2>
+        <div class="table-wrap">
+          <table id="logTable">
+            <thead>
+              <tr>
+                <th style="min-width:120px">Date</th>
+                <th style="min-width:200px">Client</th>
+                <th style="min-width:160px">Type</th>
+                <th class="num">Revenue (XCD)</th>
+                <th class="num">Costs (XCD)</th>
+                <th class="num">Profit (XCD)</th>
+                <th class="center">Margin</th>
+                <th style="min-width:240px">Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          Inventory is modeled per fixture. App warns if you exceed available quantity.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- QUOTE VIEW -->
+  <div id="quoteView" style="display:none">
+    <div class="quoteShell">
+      <section class="card">
+        <div class="quoteHeader">
+          <div>
+            <h2 class="quoteTitle">Single-Page Quote Summary</h2>
+            <div class="quoteMeta" id="quoteMeta"></div>
+          </div>
+          <div class="quoteActions noPrint">
+            <select id="quoteMode" title="Quote mode" style="min-width:180px">
+              <option value="INTERNAL" selected>Internal (profit)</option>
+              <option value="CLIENT">Client (clean)</option>
+            </select>
+            <button id="backBtn" class="secondary">Back to Builder</button>
+            <button id="printBtn">Print / Save PDF</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="quoteGrid">
+          <div class="quoteBox">
+            <div class="k">Fixture Rental Total (XCD)</div>
+            <div class="v" id="qRental">—</div>
+          </div>
+          <div class="quoteBox">
+            <div class="k">Labour (XCD)</div>
+            <div class="v" id="qLabour">—</div>
+            <div class="k" style="margin-top:6px">Assistants + Operator/Programmer</div>
+          </div>
+          <div class="quoteBox">
+            <div class="k">Transportation (XCD)</div>
+            <div class="v" id="qTransport">—</div>
+            <div class="k" style="margin-top:6px">Fuel / Transport line item</div>
+          </div>
+          <div class="quoteBox" id="qOtherBox">
+            <div class="k">Other Direct Costs (XCD)</div>
+            <div class="v" id="qOtherCosts">—</div>
+            <div class="k" style="margin-top:6px">Consumables + sub-rentals + maintenance + misc</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="quoteGrid" id="quoteTotalsGrid">
+          <div class="quoteBox" id="qCostsBox">
+            <div class="k">Direct Costs Total (XCD)</div>
+            <div class="v" id="qCosts">—</div>
+          </div>
+          <div class="quoteBox">
+            <div class="k">Grand Total (XCD)</div>
+            <div class="v" id="qGrandTotal">—</div>
+            <div class="k" id="qGrandNote" style="margin-top:6px">Rental + Labour + Transport + Other</div>
+          </div>
+
+          <div id="internalOnlyProfit" class="quoteBox">
+            <div class="k">Profit (XCD)</div>
+            <div class="v" id="qProfit">—</div>
+          </div>
+          <div id="internalOnlyMargin" class="quoteBox">
+            <div class="k">Margin</div>
+            <div class="v" id="qMargin">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Rental Breakdown</h2>
+        <div class="table-wrap">
+          <table class="quoteTable" id="quoteItems">
+            <thead>
+              <tr>
+                <th>Fixture</th>
+                <th class="num">Rate</th>
+                <th class="center">Qty</th>
+                <th class="num">Line Total</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          This view is meant for quick internal quoting. It shows <b>fixture rental</b>, <b>labour</b>, and <b>transportation</b> as separate numbers.
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Currency formatting (XCD)
+  const money = (n) => new Intl.NumberFormat(undefined, {
+    style:"currency", currency:"XCD", maximumFractionDigits:0
+  }).format(isFinite(n)?n:0);
+  const pct = (n) => (isFinite(n)?(n*100).toFixed(0):"0")+"%";
+  const todayStr = () => new Date().toISOString().slice(0,10);
+  const $ = (id) => document.getElementById(id);
+
+    const RULES = {
+    tiers: [
+      { name: "Small",  maxBudget: 900,  reserve: 0, minProfit: 0, minMargin: 0.45 },
+      { name: "Medium", maxBudget: 1500, reserve: 0, minProfit: 0, minMargin: 0.50 },
+      { name: "Large",  maxBudget: Infinity, reserve: 0, minProfit: 0, minMargin: 0.55 },
+    ],
+  };
+
+  // Inventory (LEKO qty corrected = 1)
+  const DEFAULT_FIXTURES = [
+    { sku:"MH-SHEHDS-7R",       category:"Moving Head", name:"SHEHDS 230W 7R Beam Moving Head", qty:2, rate:50, tags:["premium","beam"], suggested:{Small:0, Medium:1, Large:2} },
+    { sku:"MH-BETOPPER-BSW200", category:"Moving Head", name:"Betopper BSW200 200W Hybrid Spot/Beam/Wash", qty:2, rate:50, tags:["premium","hybrid"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"MH-BETOPPER-10x15",  category:"Moving Head", name:"Betopper 10×15W RGBW Beam Moving Head", qty:2, rate:50, tags:["motion"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"MH-RIUKOE-7x12",     category:"Moving Head", name:"RIUKOE 7×12 Mini Moving Head", qty:2, rate:50, tags:["motion"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"MH-BETOPPER-BEE",    category:"Moving Head", name:"Betopper Mini 7×40W RGBW Bee Eye Moving Head", qty:1, rate:50, tags:["motion"], suggested:{Small:0, Medium:1, Large:1} },
+    { sku:"WM-DJWORLD-19x15",   category:"Wash/Mover",  name:"DJ World Beam+Wash 19×15W RGBW Zoom", qty:2, rate:50, tags:["wash","motion"], suggested:{Small:0, Medium:2, Large:2} },
+
+    { sku:"BL-DJWORLD-2EYES",   category:"Blinder/Key", name:"DJ World 2 Eyes 200W LED COB CCT (Warm/Cool)", qty:2, rate:50, tags:["key","punch"], suggested:{Small:0, Medium:1, Large:2} },
+    { sku:"PR-SHEHDS-LEKO350",  category:"Profiles",    name:"SHEHDS LED 350W Optical Zoom LEKO (Warm/Cool)", qty:1, rate:50, tags:["key","profile"], suggested:{Small:0, Medium:1, Large:1} },
+
+    { sku:"PAR-SHEHDS-18x18",   category:"Wash",        name:"SHEHDS 18×18W Flat Par (RGBAW/UV capable)", qty:4, rate:50, tags:["fill"], suggested:{Small:4, Medium:4, Large:4} },
+    { sku:"W-RF-WEDGE",         category:"Wash",        name:"RF WEDGE 54W RGBWA+UV", qty:4, rate:50, tags:["fill","uv"], suggested:{Small:4, Medium:4, Large:4} },
+    { sku:"PAR-MONOPRICE-UV",   category:"Wash",        name:"Monoprice PAR StageLight RGBAW-UV", qty:2, rate:50, tags:["fill","uv"], suggested:{Small:2, Medium:2, Large:2} },
+    { sku:"W-ROCKVILLE-STM36",  category:"Wash",        name:"Rockville STAGEMATRIX 36 RGB", qty:3, rate:50, tags:["fill"], suggested:{Small:3, Medium:3, Large:3} },
+    { sku:"FX-ROCKVILLE-ROCKBEAMDC", category:"Beam/FX", name:"Rockville RockBeam DC", qty:2, rate:50, tags:["beam","fx"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"W-RIUKOE-PLW0124",   category:"Wash",        name:"RIUKOE PL-W0124 (wash fixture)", qty:2, rate:50, tags:["fill"], suggested:{Small:2, Medium:2, Large:2} },
+
+    { sku:"BAR-LALUCENATZ",     category:"Bars",        name:"LaluceNatz 40in 100W 12-LED RGB Light Bar", qty:2, rate:50, tags:["coverage"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"BAR-OPPSK-120W",     category:"Bars",        name:"OPPSK 120W 36LED Light Bar", qty:2, rate:50, tags:["coverage"], suggested:{Small:1, Medium:2, Large:2} },
+
+    { sku:"FX-OPPSK-STROBE",    category:"FX",          name:"OPPSK Stage Strobe", qty:2, rate:50, tags:["fx"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"FX-CHAUVET-1800",    category:"Atmosphere",  name:"Chauvet Hurricane 1800 Flex (Fog)", qty:1, rate:50, tags:["multiplier"], suggested:{Small:1, Medium:1, Large:1}, keepMin:1 },
+  ];
+
+  let state = {
+    clientName:"", eventType:"",
+    budget:2500, costs:700,
+    costMode:"CALC",
+    fitMode:"YES", target:"BUILD",
+    tierOverride:"AUTO", tier:"Small",
+    reserve:0, buildBudget:0,
+    fixtures:[], editMode:"NO", log:[],
+    dc: { assistCount:1, assistRate:300, operator:0, fuel:200, consumables:80, rentals:0, maint:120, misc:0 }
+  };
+
+  // ---- Storage ----
+  function loadLog(){ try{ const raw=localStorage.getItem("ln268_log_xcd_margin_targets_flat50_margin_targets_rates"); state.log = raw?JSON.parse(raw):[]; }catch{ state.log=[]; } }
+  function saveLog(){ localStorage.setItem("ln268_log_xcd_margin_targets_flat50_margin_targets_rates", JSON.stringify(state.log)); }
+
+  function loadFixtureOverrides(){ try{ const raw=localStorage.getItem("ln268_fixture_overrides_xcd_margin_targets_flat50_margin_targets_rates"); return raw?JSON.parse(raw):{}; }catch{ return {}; } }
+  function saveFixtureOverrides(o){ localStorage.setItem("ln268_fixture_overrides_xcd_margin_targets_flat50_margin_targets_rates", JSON.stringify(o)); }
+  function resetFixtureOverrides(){ localStorage.removeItem("ln268_fixture_overrides_xcd_margin_targets_flat50_margin_targets_rates"); }
+
+  function loadDc(){ try{ const raw=localStorage.getItem("ln268_dc_xcd_margin_targets_flat50_margin_targets_rates"); return raw?JSON.parse(raw):null; }catch{ return null; } }
+  function saveDc(){ localStorage.setItem("ln268_dc_xcd_margin_targets_flat50_margin_targets_rates", JSON.stringify(state.dc)); }
+
+  // ---- Rules / init ----
+  function computeTier(budget){ for(const t of RULES.tiers){ if(budget<=t.maxBudget) return t.name; } return "Large"; }
+  function tierRules(name){ return RULES.tiers.find(t=>t.name===name) || RULES.tiers[1]; }
+
+  function initFixtures(){
+    const overrides = loadFixtureOverrides();
+    state.fixtures = DEFAULT_FIXTURES.map(f=>{
+      const o = overrides[f.sku] || {};
+      const qty = Number.isFinite(o.qty) ? o.qty : f.qty;
+      const rate = Number.isFinite(o.rate) ? o.rate : f.rate;
+      return {...f, qty, rate, keepMin:f.keepMin||0, suggestedQty:0, finalQty:0, lineTotal:0};
+    });
+  }
+
+  function initDc(){
+    const saved = loadDc();
+    if(saved && typeof saved === "object"){
+      state.dc = {...state.dc, ...saved};
+    }
+    $("dcAssistCount").value = state.dc.assistCount;
+    $("dcAssistRate").value = state.dc.assistRate;
+    $("dcOperator").value = state.dc.operator;
+    $("dcFuel").value = state.dc.fuel;
+    $("dcConsumables").value = state.dc.consumables;
+    $("dcRentals").value = state.dc.rentals;
+    $("dcMaint").value = state.dc.maint;
+    $("dcMisc").value = state.dc.misc;
+  }
+
+  // ---- Direct costs breakdown ----
+  function labourTotal(){
+    const dc = state.dc;
+    return (dc.assistCount||0) * (dc.assistRate||0) + (dc.operator||0);
+  }
+  function transportTotal(){
+    return (state.dc.fuel||0);
+  }
+  function otherDirectCostsTotal(){
+    const dc = state.dc;
+    return (dc.consumables||0) + (dc.rentals||0) + (dc.maint||0) + (dc.misc||0);
+  }
+  function directCostTotal(){
+    return labourTotal() + transportTotal() + otherDirectCostsTotal();
+  }
+
+  function applyCostMode(){
+    const total = directCostTotal();
+    $("dcTotalPill").textContent = "Total: " + money(total);
+    if(state.costMode === "CALC"){
+      state.costs = Math.round(total);
+      $("costs").value = state.costs;
+      $("costs").disabled = true;
+    } else {
+      $("costs").disabled = false;
+      state.costs = Number($("costs").value || 0);
+    }
+  }
+
+  // ---- Fixture plan ----
+  function computeSuggested(){
+    for(const f of state.fixtures){
+      f.suggestedQty = f.suggested?.[state.tier] ?? 0;
+      f.suggestedQty = Math.min(f.qty, Math.max(0, f.suggestedQty));
+    }
+  }
+  function sumSuggestedTotal(){
+    return state.fixtures.reduce((acc,f)=> acc + (f.rate * (f.suggestedQty||0)), 0);
+  }
+  function applyFitToBudget(){
+    const targetBudget = state.target==="CLIENT" ? state.budget : state.buildBudget;
+    const suggestedTotal = sumSuggestedTotal();
+    const scale = (state.fitMode==="YES" && suggestedTotal>0) ? Math.min(1, targetBudget/suggestedTotal) : 1;
+
+    for(const f of state.fixtures){
+      const base = f.suggestedQty || 0;
+      if(state.fitMode==="YES"){
+        let scaled = Math.round(base * scale);
+        if(base>0 && f.keepMin) scaled = Math.max(f.keepMin, scaled);
+        scaled = Math.min(f.qty, Math.max(0, scaled));
+        f.finalQty = scaled;
+      }else{
+        f.finalQty = Math.min(f.qty, Math.max(0, base));
+      }
+    }
+  }
+
+  // ---- Totals / status ----
+  function fixtureRentalTotal(){
+    return state.fixtures.reduce((acc,f)=> acc + ((f.rate||0)*(f.finalQty||0)), 0);
+  }
+
+  function recomputeTotals(){
+    applyCostMode();
+
+    const autoTier = computeTier(state.budget);
+    state.tier = (state.tierOverride==="AUTO") ? autoTier : state.tierOverride;
+
+    const tr = tierRules(state.tier);
+    state.reserve = tr.reserve;
+    state.buildBudget = Math.max(0, state.budget - state.reserve);
+
+    computeSuggested();
+    applyFitToBudget();
+
+    let quoteTotal = 0;
+    for(const f of state.fixtures){
+      f.lineTotal = (f.rate||0)*(f.finalQty||0);
+      quoteTotal += f.lineTotal;
+    }
+
+    const profit = quoteTotal - state.costs;
+    const margin = quoteTotal>0 ? (profit/quoteTotal) : 0;
+    const targetBudget = (state.target==="CLIENT" ? state.budget : state.buildBudget);
+
+    let status = "OK";
+    if(quoteTotal > targetBudget) status = "OVER BUDGET";
+    else if(margin < (tr.minMargin ?? 0)) status = "BELOW TARGET";
+
+    $("tierPill").textContent = `Tier: ${state.tier}`;
+    $("reserve").textContent = money(state.reserve);
+    $("buildBudget").textContent = money(state.buildBudget);
+    $("quoteTotal").textContent = money(quoteTotal);
+    $("profit").textContent = money(profit);
+    $("margin").textContent = pct(margin);
+
+    const statusEl = $("status");
+    statusEl.textContent = status;
+    statusEl.className = "v " + (status==="OK" ? "ok" : (status==="OVER BUDGET" ? "warn" : "bad"));
+
+    const profitEl = $("profit");
+    profitEl.className = "v " + (margin >= (tr.minMargin ?? 0) ? "ok" : "bad");
+
+    renderFixtures();
+    renderLog();
+    renderTrackerSummary();
+  }
+
+  function updateTotalsOnly(){
+    applyCostMode();
+
+    let quoteTotal = 0;
+    for(const f of state.fixtures){
+      f.lineTotal = (f.rate||0)*(f.finalQty||0);
+      quoteTotal += f.lineTotal;
+    }
+    const tr = tierRules(state.tier);
+    const profit = quoteTotal - state.costs;
+    const margin = quoteTotal>0 ? (profit/quoteTotal) : 0;
+    const targetBudget = (state.target==="CLIENT" ? state.budget : state.buildBudget);
+
+    $("quoteTotal").textContent = money(quoteTotal);
+    $("profit").textContent = money(profit);
+    $("margin").textContent = pct(margin);
+
+    let status="OK";
+    if(quoteTotal>targetBudget) status="OVER BUDGET";
+    else if(margin<(tr.minMargin ?? 0)) status="BELOW TARGET";
+
+    const statusEl=$("status");
+    statusEl.textContent=status;
+    statusEl.className="v "+(status==="OK"?"ok":(status==="OVER BUDGET"?"warn":"bad"));
+
+    const profitEl=$("profit");
+    profitEl.className="v "+(margin>=(tr.minMargin ?? 0)?"ok":"bad");
+  }
+
+  // ---- Rendering ----
+  function chipClass(tag){ return (tag==="premium"||tag==="beam"||tag==="hybrid") ? "premium" : "ok"; }
+
+  function persistFixtureOverrides(){
+    const o = {};
+    state.fixtures.forEach(f => { o[f.sku] = { rate:f.rate, qty:f.qty }; });
+    saveFixtureOverrides(o);
+  }
+
+  function renderFixtures(){
+    const tbody = $("fixtureTable").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    state.fixtures.forEach((f, idx) => {
+      const tr = document.createElement("tr");
+      const tags = (f.tags||[]).map(t=>`<span class="chip ${chipClass(t)}">${t}</span>`).join("");
+
+      const rateCell = state.editMode==="YES"
+        ? `<input class="mini" type="number" min="0" step="1" value="${f.rate}" data-kind="rate" data-idx="${idx}" />`
+        : `${money(f.rate)}`;
+
+      const availCell = state.editMode==="YES"
+        ? `<input class="qty" type="number" min="0" step="1" value="${f.qty}" data-kind="qty" data-idx="${idx}" />`
+        : `${f.qty}`;
+
+      tr.innerHTML = `
+        <td>${f.category}</td>
+        <td><div style="font-weight:600">${f.name}</div><small>${f.sku}</small></td>
+        <td class="num">${rateCell}</td>
+        <td class="center">${availCell}</td>
+        <td class="center">${f.suggestedQty}</td>
+        <td class="center"><input class="qty" type="number" min="0" step="1" value="${f.finalQty}" data-kind="final" data-idx="${idx}" /></td>
+        <td class="num">${money(f.lineTotal)}</td>
+        <td>${tags}</td>
+      `;
+
+      if(f.finalQty > f.qty) tr.style.background = "rgba(239,68,68,.10)";
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll("input").forEach(inp => {
+      inp.addEventListener("input", (e) => {
+        const idx = Number(e.target.dataset.idx);
+        const kind = e.target.dataset.kind;
+        let v = Number(e.target.value || 0);
+        if(!isFinite(v) || v < 0) v = 0;
+        v = Math.round(v);
+
+        if(kind === "final"){
+          v = Math.min(state.fixtures[idx].qty, v);
+          state.fixtures[idx].finalQty = v;
+        } else if(kind === "rate"){
+          state.fixtures[idx].rate = v;
+          persistFixtureOverrides();
+        } else if(kind === "qty"){
+          state.fixtures[idx].qty = v;
+          state.fixtures[idx].finalQty = Math.min(state.fixtures[idx].finalQty, v);
+          persistFixtureOverrides();
+        }
+        updateTotalsOnly();
+        renderFixtures();
+      });
+    });
+  }
+
+  function renderLog(){
+    const tbody = $("logTable").querySelector("tbody");
+    tbody.innerHTML = "";
+    state.log.slice().reverse().forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.date}</td><td>${item.client||""}</td><td>${item.type||""}</td>
+        <td class="num">${money(item.revenue)}</td><td class="num">${money(item.costs)}</td>
+        <td class="num">${money(item.profit)}</td><td class="center">${pct(item.margin)}</td><td>${item.notes||""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderTrackerSummary(){
+    const n = state.log.length;
+    const totalRev = state.log.reduce((a,x)=>a+(x.revenue||0),0);
+    const totalProfit = state.log.reduce((a,x)=>a+(x.profit||0),0);
+    const avgMargin = totalRev>0 ? totalProfit/totalRev : 0;
+    $("trackerSummary").textContent = `Tracker: ${n} event${n===1?"":"s"} • Total Rev ${money(totalRev)} • Total Profit ${money(totalProfit)} • Avg Margin ${pct(avgMargin)}`;
+  }
+
+  // ---- Quote page ----
+  
+  // ---- Quote page ----
+  
+  // ---- Quote page ----
+  let quoteCache = null;
+
+  function applyQuoteMode(mode){
+    const isInternal = (mode === "INTERNAL");
+    // Internal shows profit/margin + other/direct-costs; Client hides them.
+    $("internalOnlyProfit").style.display = isInternal ? "block" : "none";
+    $("internalOnlyMargin").style.display = isInternal ? "block" : "none";
+    if($("qOtherBox")) $("qOtherBox").style.display = isInternal ? "block" : "none";
+    if($("qCostsBox")) $("qCostsBox").style.display = isInternal ? "block" : "none";
+    renderQuoteSummary(mode);
+  }
+
+  function renderQuoteSummary(mode){
+    if(!quoteCache) return;
+
+    const { rental, labour, transport, otherCosts, costs } = quoteCache;
+    const isInternal = (mode === "INTERNAL");
+
+    // Internal grand total includes "Other Direct Costs" line item.
+    // Client grand total excludes it (since it's hidden), per your request.
+    const grandTotal = isInternal ? (rental + labour + transport + otherCosts) : (rental + labour + transport);
+
+    // Profit view (internal)
+    const profit = grandTotal - costs;
+    const margin = grandTotal > 0 ? profit / grandTotal : 0;
+
+    $("qRental").textContent = money(rental);
+    $("qLabour").textContent = money(labour);
+    $("qTransport").textContent = money(transport);
+    $("qOtherCosts").textContent = money(otherCosts);
+    $("qCosts").textContent = money(costs);
+    $("qGrandTotal").textContent = money(grandTotal);
+    $("qProfit").textContent = money(profit);
+    $("qMargin").textContent = pct(margin);
+
+    if($("qGrandNote")){
+      $("qGrandNote").textContent = isInternal
+        ? "Rental + Labour + Transport + Other"
+        : "Rental + Labour + Transport";
+    }
+  }
+
+  function openQuoteView(){
+    // cache current values
+    quoteCache = {
+      rental: fixtureRentalTotal(),
+      labour: labourTotal(),
+      transport: transportTotal(),
+      otherCosts: otherDirectCostsTotal(),
+      costs: state.costs
+    };
+
+    const metaLines = [
+      `Date: ${todayStr()}`,
+      `Client: ${state.clientName || "—"}`,
+      `Event: ${state.eventType || "—"}`,
+      `Tier: ${state.tier}`,
+      `Client Budget: ${money(state.budget)}`
+    ];
+    $("quoteMeta").innerHTML = metaLines.join("<br/>");
+
+    // rental items table: only items with qty>0
+    const tbody = $("quoteItems").querySelector("tbody");
+    tbody.innerHTML = "";
+    const items = state.fixtures.filter(f => (f.finalQty||0) > 0);
+    if(items.length === 0){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="4" style="color:var(--muted)">No fixtures selected.</td>`;
+      tbody.appendChild(tr);
+    } else {
+      items.forEach(f => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${f.name}</td>
+          <td class="num">${money(f.rate)}</td>
+          <td class="center">${f.finalQty}</td>
+          <td class="num">${money(f.rate * f.finalQty)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // switch views
+    $("builderView").style.display = "none";
+    $("quoteView").style.display = "block";
+
+    // apply current mode
+    const mode = ($("quoteMode")?.value) || "INTERNAL";
+    applyQuoteMode(mode);
+
+    window.scrollTo(0,0);
+  }
+
+function closeQuoteView(){
+    $("quoteView").style.display = "none";
+    $("builderView").style.display = "block";
+    window.scrollTo(0,0);
+  }
+
+  // ---- Actions ----
+  function resetQuantities(){ recomputeTotals(); }
+
+  function logEvent(){
+    const rental = Math.round(fixtureRentalTotal());
+    const labour = Math.round(labourTotal());
+    const transportation = Math.round(transportTotal());
+    const other = Math.round(otherDirectCostsTotal());
+    const revenue = rental + labour + transportation + other;
+    const profit = revenue - state.costs;
+    const margin = revenue>0 ? profit/revenue : 0;
+    state.log.push({date:todayStr(), client:state.clientName, type:state.eventType, revenue, costs:Math.round(state.costs), profit:Math.round(profit), margin, notes:"Logged from Quote Builder"});
+    saveLog(); renderLog(); renderTrackerSummary();
+  }
+
+  function exportQuoteJSON(){
+    const rental = Math.round(fixtureRentalTotal());
+    const labour = Math.round(labourTotal());
+    const transportation = Math.round(transportTotal());
+    const other = Math.round(otherDirectCostsTotal());
+    const revenue = rental + labour + transportation + other;
+    const payload = {
+      currency:"XCD",
+      client: state.clientName, eventType: state.eventType, budget: state.budget,
+      tier: state.tier, reserve: state.reserve, buildBudget: state.buildBudget,
+      fitMode: state.fitMode, scalingTarget: state.target,
+      fixtureRentalTotal: rental,
+      directCosts: state.costs,
+      directCostBreakdown: {
+        labour: labourTotal(),
+        transportation: transportTotal(),
+        other: otherDirectCostsTotal(),
+        detail: {...state.dc},
+      },
+      profit: revenue - state.costs,
+      items: state.fixtures.map(f => ({ sku:f.sku, name:f.name, rate:f.rate, avail:f.qty, suggested:f.suggestedQty, qty:f.finalQty, lineTotal:(f.rate||0)*(f.finalQty||0) }))
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `LightNation_quote_${todayStr()}_XCD.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearLog(){
+    if(!confirm("Clear all logged events on this browser?")) return;
+    state.log = []; saveLog(); renderLog(); renderTrackerSummary();
+  }
+
+  function resetRatesAvail(){
+    if(!confirm("Reset rates/availability back to defaults?")) return;
+    resetFixtureOverrides(); initFixtures(); recomputeTotals();
+  }
+
+  // ---- Wiring ----
+  function wireDc(){
+    const bindNum = (id, key) => {
+      $(id).addEventListener("input", e => {
+        state.dc[key] = Math.max(0, Math.round(Number(e.target.value || 0)));
+        saveDc();
+        recomputeTotals();
+      });
+    };
+    bindNum("dcAssistCount", "assistCount");
+    bindNum("dcAssistRate", "assistRate");
+    bindNum("dcOperator", "operator");
+    bindNum("dcFuel", "fuel");
+    bindNum("dcConsumables", "consumables");
+    bindNum("dcRentals", "rentals");
+    bindNum("dcMaint", "maint");
+    bindNum("dcMisc", "misc");
+  }
+
+  function wire(){
+    $("clientName").addEventListener("input", e => { state.clientName = e.target.value; });
+    $("eventType").addEventListener("input", e => { state.eventType = e.target.value; });
+
+    $("budget").addEventListener("input", e => { state.budget = Math.max(0, Math.round(Number(e.target.value || 0))); recomputeTotals(); });
+
+    $("costMode").addEventListener("change", e => { state.costMode = e.target.value; recomputeTotals(); });
+    $("costs").addEventListener("input", e => { state.costs = Math.max(0, Math.round(Number(e.target.value || 0))); updateTotalsOnly(); });
+
+    $("fitMode").addEventListener("change", e => { state.fitMode = e.target.value; recomputeTotals(); });
+    $("target").addEventListener("change", e => { state.target = e.target.value; recomputeTotals(); });
+    $("tierOverride").addEventListener("change", e => { state.tierOverride = e.target.value; recomputeTotals(); });
+    $("editMode").addEventListener("change", e => { state.editMode = e.target.value; renderFixtures(); });
+
+    $("quoteBtn").addEventListener("click", openQuoteView);
+    $("backBtn").addEventListener("click", closeQuoteView);
+    $("printBtn").addEventListener("click", () => window.print());
+
+    $("quoteMode").addEventListener("change", (e) => applyQuoteMode(e.target.value));
+
+    $("resetBtn").addEventListener("click", resetQuantities);
+    $("logBtn").addEventListener("click", logEvent);
+    $("exportBtn").addEventListener("click", exportQuoteJSON);
+    $("clearLogBtn").addEventListener("click", clearLog);
+    $("resetRatesBtn").addEventListener("click", resetRatesAvail);
+
+    wireDc();
+  }
+
+  (function init(){
+    loadLog();
+    initFixtures();
+
+    // seed state from UI
+    state.budget = Math.max(0, Math.round(Number($("budget").value || 0)));
+    state.costMode = $("costMode").value;
+    state.fitMode = $("fitMode").value;
+    state.target = $("target").value;
+    state.tierOverride = $("tierOverride").value;
+    state.editMode = $("editMode").value;
+
+    initDc();
+    wire();
+    recomputeTotals();
+  })();
+</script>
+</body>
+</html>

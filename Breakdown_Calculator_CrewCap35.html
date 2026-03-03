@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LightNation • Internal Breakdown Calculator (XCD)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --text:#e5e7eb; --muted:#9ca3af; --blue:#0ea5e9;
+      --red:#ef4444; --green:#22c55e; --amber:#f59e0b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:radial-gradient(1200px 800px at 20% 10%, #0b2a45 0%, var(--bg) 55%) fixed;
+      color:var(--text);
+    }
+    header{
+      padding:18px 18px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:rgba(0,0,0,.18);
+      backdrop-filter:blur(6px);
+      position:sticky; top:0; z-index:5;
+    }
+    .brand{display:flex;align-items:center;gap:12px;}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:linear-gradient(145deg, rgba(14,165,233,.9), rgba(14,165,233,.2));
+      box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 12px 30px rgba(14,165,233,.18);
+    }
+    h1{font-size:18px;margin:0;letter-spacing:.4px}
+    .tag{margin:3px 0 0;color:var(--muted);font-size:12px}
+
+    main{padding:18px;max-width:980px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:380px 1fr;gap:14px;}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:0 10px 40px rgba(0,0,0,.25);
+    }
+    .row{display:flex;gap:10px;margin:10px 0;align-items:center}
+    label{font-size:12px;color:var(--muted);width:170px}
+    input{
+      width:100%;padding:10px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.25);color:var(--text);outline:none;
+    }
+    input:focus{border-color:rgba(14,165,233,.55);box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+    .pill{
+      font-family:var(--mono);font-size:12px;padding:6px 9px;border-radius:999px;
+      background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.25);color:#dbeafe;white-space:nowrap;
+    }
+    .note{color:var(--muted);font-size:12px;line-height:1.35;margin-top:10px}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .stat{padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);}
+    .stat .k{color:var(--muted);font-size:11px}
+    .stat .v{font-family:var(--mono);font-size:15px;margin-top:6px}
+    .v.ok{color:var(--green)} .v.bad{color:var(--red)} .v.warn{color:var(--amber)}
+
+    table{width:100%;border-collapse:collapse;background:rgba(0,0,0,.14);border-radius:14px;overflow:hidden}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+    th{background:rgba(17,24,39,.88);color:#dbeafe;text-align:left}
+    td.num{font-family:var(--mono);text-align:right}
+    td.center{text-align:center}
+    .bar{
+      height:12px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08)
+    }
+    .bar > div{height:100%;background:rgba(14,165,233,.55)}
+    .btnbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{
+      padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);
+      background:rgba(14,165,233,.18);color:#e0f2fe;cursor:pointer;font-weight:600;
+    }
+    button.secondary{background:rgba(255,255,255,.06);color:var(--text)}
+    @media print{
+      header{position:static}
+      .noPrint{display:none !important}
+      body{background:#fff;color:#000}
+      .card{box-shadow:none}
+      th,td{color:#000}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div>
+      <h1>LightNation • Internal Breakdown <span class="pill">XCD</span></h1>
+      <div class="tag">Transport 10% • You 35% • Crew total max 35% (split among crew) • You are always part of crew • Margin zones: <10% low, 10–15% min, 15–20% healthy, 20%+ strong</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:13px;color:#dbeafe;letter-spacing:.3px">Inputs</h2>
+        <span class="pill" id="statusPill">OK</span>
+      </div>
+
+      <div class="row">
+        <label>Job Pay (XCD)</label>
+        <input id="pay" type="number" min="0" step="1" value="1500" />
+      </div>
+
+      <div class="row">
+        <label>Additional Crew (besides you)</label>
+        <input id="crewCount" type="number" min="0" max="4" step="1" value="2" />
+      </div>
+
+      <div class="row">
+        <label>Target Margin (%)</label>
+        <input id="targetMargin" type="number" min="0" max="60" step="1" value="10" />
+      </div>
+
+      <div class="note">
+        Crew payout is capped at <b>35% total</b>. You are <b>always counted as crew</b>.
+        The field above is <b>additional crew besides you</b> (max 4), so total crew people = <b>1 + additional</b>.
+        Your share of the crew split is automatically <b>added to your pay</b>.
+        You set a <b>target margin</b>. Crew (other people) gets the remainder (up to 35% total pool). If remainder exceeds 35%, margin increases above target. <b>Auto rules:</b> if pay is below <b>800 XCD</b>, crew is forced to <b>you only</b>. Also, no individual crew member will ever earn more than the business margin amount.
+      </div>
+
+      <div class="btnbar noPrint">
+        <button id="printBtn">Print / Save PDF</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+
+      <div class="summary">
+        <div class="stat">
+          <div class="k">Allocated (Transport+You+Crew)</div>
+          <div class="v" id="allocPct">—</div>
+        </div>
+        <div class="stat">
+          <div class="k">Actual Margin %</div>
+          <div class="v" id="marginPct">—</div>
+        </div>
+        <div class="stat">
+          <div class="k">Target Margin %</div>
+          <div class="v" id="targetMarginStat">—</div>
+        </div>
+        <div class="stat">
+          <div class="k">Margin Zone</div>
+          <div class="v" id="marginZone">—</div>
+        </div>
+        <div class="stat">
+          <div class="k">Per Crew Member</div>
+          <div class="v" id="perCrew">—</div>
+        </div>
+        <div class="stat">
+          <div class="k">Margin Amount</div>
+          <div class="v" id="marginAmt">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin:0 0 10px;font-size:13px;color:#dbeafe;letter-spacing:.3px">Breakdown</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Bucket</th>
+            <th class="center">%</th>
+            <th class="num">Amount (XCD)</th>
+            <th style="width:32%">Visual</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div class="note" id="warnNote" style="display:none"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const money = (n) => new Intl.NumberFormat(undefined, {
+    style:"currency", currency:"XCD", maximumFractionDigits:0
+  }).format(isFinite(n)?n:0);
+
+  const P_TRANSPORT = 0.10;
+  const P_YOU_BASE = 0.35;
+  const P_CREW_MAX = 0.35; // total crew payout cap (split among crew)
+  const CREW_MAX_COUNT = 4;
+
+
+  function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+
+  function setPill(ok){
+    $("statusPill").textContent = ok ? "OK" : "OVER-ALLOCATED";
+    $("statusPill").style.background = ok ? "rgba(34,197,94,.12)" : "rgba(239,68,68,.15)";
+    $("statusPill").style.borderColor = ok ? "rgba(34,197,94,.22)" : "rgba(239,68,68,.25)";
+    $("statusPill").style.color = ok ? "#bbf7d0" : "#fee2e2";
+  }
+
+  function calc(){
+    const pay = Math.max(0, Math.round(Number($("pay").value || 0)));
+    let addCrew = Math.max(0, Math.round(Number($("crewCount").value || 0)));
+    if(addCrew > CREW_MAX_COUNT) addCrew = CREW_MAX_COUNT;
+
+    // Auto rule: if pay < 800 XCD, force you-only crew
+    if(pay < 800) addCrew = 0;
+
+    $("crewCount").value = addCrew;
+
+    let targetMarginPct = Math.max(0, Math.round(Number($("targetMargin").value || 0))) / 100;
+    if(targetMarginPct > 0.60) targetMarginPct = 0.60; // sanity cap
+    $("targetMargin").value = Math.round(targetMarginPct * 100);
+
+    const totalCrewPeople = 1 + addCrew;              // you are always part of crew
+
+    // Crew percent pool is whatever is left AFTER transport + operator base + target margin, capped at 35%.
+    const remainderForCrewPool = 1 - (P_TRANSPORT + P_YOU_BASE + targetMarginPct);
+    const crewPoolPctDesired = Math.min(P_CREW_MAX, Math.max(0, remainderForCrewPool));
+
+    // Split desired pool: your share + others' share
+    let yourCrewSharePct = crewPoolPctDesired / totalCrewPeople;
+    let crewOthersPct = Math.max(0, crewPoolPctDesired - yourCrewSharePct);
+
+    // Rule: ensure no individual crew member (others) earns more than business margin amount.
+    // In percent terms, enforce: (crewOthersPct / addCrew) <= marginPct.
+    // With your share included in "You", marginPct = 1 - transport - base - (yourCrewSharePct + crewOthersPct).
+    // And for addCrew>0, yourCrewSharePct equals crewOthersPct/addCrew if pool is split evenly.
+    if(addCrew > 0){
+      const C = 1 - P_TRANSPORT - P_YOU_BASE;              // percent left after transport+operator base
+      const maxCrewOthersPct = (C * addCrew) / (addCrew + 2); // derived from per-crew <= margin constraint
+
+      // Apply cap to others' crew percent
+      crewOthersPct = Math.min(crewOthersPct, maxCrewOthersPct);
+
+      // Recompute your share and resulting pool after cap (still even split)
+      yourCrewSharePct = crewOthersPct / addCrew;
+    } else {
+      // addCrew = 0 => no "other" crew
+      crewOthersPct = 0;
+      // keep yourCrewSharePct as your share of desired pool (which is all you)
+      yourCrewSharePct = crewPoolPctDesired; // totalCrewPeople = 1
+    }
+
+    const youPct = P_YOU_BASE + yourCrewSharePct;
+    const marginPct = 1 - (P_TRANSPORT + youPct + crewOthersPct);
+
+    // Amounts
+    const aTransport = pay * P_TRANSPORT;
+    const aYou = pay * youPct;
+    const aCrewOthersTotal = pay * crewOthersPct;
+    const aMargin = pay * marginPct;
+
+    const perOtherCrew = addCrew > 0 ? (aCrewOthersTotal / addCrew) : 0;
+
+    // Feasibility: if remainderForCrewPool < 0, target margin is impossible with fixed transport+operator base
+    const impossible = remainderForCrewPool < 0;
+
+    // Margin zones based on ACTUAL margin
+    let zone = "MIN";
+    let zoneClass = "warn";
+    if(marginPct < 0){
+      zone = "NEGATIVE";
+      zoneClass = "bad";
+    } else if(marginPct < 0.10){
+      zone = "LOW (<10%)";
+      zoneClass = "bad";
+    } else if(marginPct < 0.15){
+      zone = "MIN (10–15%)";
+      zoneClass = "warn";
+    } else if(marginPct < 0.20){
+      zone = "HEALTHY (15–20%)";
+      zoneClass = "ok";
+    } else {
+      zone = "STRONG (20%+)";
+      zoneClass = "ok";
+    }
+
+    // Status pill: impossible or negative margin
+    const ok = (!impossible) && (marginPct >= 0);
+    setPill(ok);
+
+    // Warning copy
+    const warn = $("warnNote");
+    if(impossible){
+      warn.style.display = "block";
+      warn.innerHTML = "<b>Impossible target:</b> Your target margin is too high given fixed Transport (10%) + Operator (35%). Lower target margin or adjust the fixed percentages.";
+    } else if(marginPct < 0){
+      warn.style.display = "block";
+      warn.innerHTML = "<b>Warning:</b> Margin is negative. Reduce target margin, increase price, or adjust your split.";
+    } else if(marginPct < 0.10){
+      warn.style.display = "block";
+      warn.innerHTML = "<b>Warning:</b> Actual margin is below <b>10%</b>. You’re operating with very little cushion for problems/repairs.";
+    } else {
+      warn.style.display = "none";
+      warn.innerHTML = "";
+    }
+
+    $("allocPct").textContent = ((P_TRANSPORT + youPct + crewOthersPct) * 100).toFixed(1) + "%";
+    $("marginPct").textContent = (marginPct * 100).toFixed(1) + "%";
+    $("marginPct").className = "v " + (marginPct >= 0.15 ? "ok" : (marginPct >= 0.10 ? "warn" : "bad"));
+
+    $("targetMarginStat").textContent = (targetMarginPct * 100).toFixed(0) + "%";
+    $("marginZone").textContent = zone;
+    $("marginZone").className = "v " + zoneClass;
+
+    // If you're the only crew, don't show a crew amount (per your request)
+    $("perCrew").textContent = addCrew > 0 ? money(perOtherCrew) : "—";
+
+    $("marginAmt").textContent = money(aMargin);
+    $("marginAmt").className = "v " + (marginPct >= 0.10 ? "ok" : "bad");
+
+    const crewPoolPctActual = yourCrewSharePct + crewOthersPct;
+    const youSub = `Operator 35% + your crew share ${(yourCrewSharePct*100).toFixed(1)}% (crew pool ${(crewPoolPctActual*100).toFixed(1)}%)`;
+
+    const crewLabel = addCrew === 0
+      ? `Crew (others): none`
+      : `Crew (others): ${addCrew} person${addCrew===1?"":"s"}`;
+
+    const crewSub = addCrew === 0
+      ? "—"
+      : `Crew to others ${(crewOthersPct*100).toFixed(1)}% • Per person: ${money(perOtherCrew)} • Rule: per person ≤ margin ${money(aMargin)}`;
+
+    const rows = [
+      { name:"Transport & Logistics", pct:P_TRANSPORT, amt:aTransport },
+      { name:"You (Operator + Crew Share)", pct:youPct, amt:aYou, sub:youSub },
+      { name:crewLabel, pct:crewOthersPct, amt:(addCrew===0 ? NaN : aCrewOthersTotal), sub:crewSub },
+      { name:"Buffer / Business Margin (actual)", pct:marginPct, amt:aMargin, sub:`Target margin: ${(targetMarginPct*100).toFixed(0)}%` },
+    ];
+
+    const tbody = $("rows");
+    tbody.innerHTML = "";
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      const pctTxt = (r.pct*100).toFixed(1) + "%";
+      const pctForBar = clamp(r.pct, 0, 1);
+
+      // Amount display: if NaN (solo crew), show dash
+      const amtTxt = Number.isFinite(r.amt) ? money(r.amt) : "—";
+
+      const amtBad = (r.name.includes("Margin") && r.pct < 0);
+      tr.innerHTML = `
+        <td>
+          <div style="font-weight:600">${r.name}</div>
+          ${r.sub ? `<div style="color:var(--muted);font-size:11px;margin-top:3px">${r.sub}</div>` : ""}
+        </td>
+        <td class="center" style="font-family:var(--mono)">${pctTxt}</td>
+        <td class="num"><span class="v ${amtBad ? "bad" : "ok"}" style="font-size:13px">${amtTxt}</span></td>
+        <td><div class="bar"><div style="width:${pctForBar*100}%"></div></div></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function reset(){
+    $("pay").value = 1500;
+    $("crewCount").value = 2;
+    $("targetMargin").value = 10;
+    calc();
+  }
+
+  $("pay").addEventListener("input", calc);
+  $("crewCount").addEventListener("input", calc);
+  $("printBtn").addEventListener("click", () => window.print());
+  $("resetBtn").addEventListener("click", reset);
+
+  calc();
+</script>
+</body>
+</html>
