@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LightNation • Quote Builder (Internal • XCD)</title>
+  <title>LightNation • Quote Builder (Flat 50 • XCD)</title>
   <style>
     :root{
       --bg:#0b1220; --text:#e5e7eb; --muted:#9ca3af; --blue:#0ea5e9;
@@ -82,8 +82,8 @@
   <div class="brand">
     <div class="logo" aria-hidden="true"></div>
     <div>
-      <h1>LightNation • Quote Builder <span class="pill">Internal</span> <span class="pill">XCD</span></h1>
-      <div class="tag">Exact inventory per fixture/model • Fit-to-Budget scaling • Direct Cost Calculator • Single-page quote view</div>
+      <h1>LightNation • Quote Builder <span class="pill">Flat 50</span> <span class="pill">XCD</span></h1>
+      <div class="tag">Corrected inventory per fixture/model • Flat 50 XCD fixture rate • Fit-to-Budget scaling • Direct Cost Calculator • Single-page quote view</div>
     </div>
   </div>
 </header>
@@ -323,30 +323,36 @@
     ],
   };
 
-  // Inventory (LEKO qty corrected = 1)
+  // Inventory updated 2026-07-07
+  // Flat-rate version: every fixture defaults to 50 XCD.
   const DEFAULT_FIXTURES = [
-    { sku:"MH-SHEHDS-7R",       category:"Moving Head", name:"SHEHDS 230W 7R Beam Moving Head", qty:2, rate:50, tags:["premium","beam"], suggested:{Small:0, Medium:1, Large:2} },
-    { sku:"MH-BETOPPER-BSW200", category:"Moving Head", name:"Betopper BSW200 200W Hybrid Spot/Beam/Wash", qty:2, rate:50, tags:["premium","hybrid"], suggested:{Small:0, Medium:2, Large:2} },
-    { sku:"MH-BETOPPER-10x15",  category:"Moving Head", name:"Betopper 10×15W RGBW Beam Moving Head", qty:2, rate:50, tags:["motion"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"MH-BETOPPER-BSW200", category:"Moving Head", name:"Betopper BSW200 200W Hybrid Spot/Beam/Wash", qty:4, rate:50, tags:["premium","hybrid","motion"], suggested:{Small:0, Medium:2, Large:4} },
+    { sku:"MH-SHEHDS-7R",       category:"Moving Head", name:"SHEHDS 230W 7R Beam Moving Head", qty:2, rate:50, tags:["premium","beam","motion"], suggested:{Small:0, Medium:1, Large:2} },
+    { sku:"MH-ROCKVILLE-ROCKBEAMDC", category:"Moving Head", name:"Rockville RockBeam DC Moving Head Beam", qty:2, rate:50, tags:["beam","fx","motion"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"WM-DJWORLD-19x15",   category:"Moving Head", name:"DJ World Beam+Wash 19×15W RGBW Zoom Moving Head", qty:2, rate:50, tags:["wash","motion","zoom"], suggested:{Small:0, Medium:2, Large:2} },
     { sku:"MH-RIUKOE-7x12",     category:"Moving Head", name:"RIUKOE 7×12 Mini Moving Head", qty:2, rate:50, tags:["motion"], suggested:{Small:1, Medium:2, Large:2} },
-    { sku:"MH-BETOPPER-BEE",    category:"Moving Head", name:"Betopper Mini 7×40W RGBW Bee Eye Moving Head", qty:1, rate:50, tags:["motion"], suggested:{Small:0, Medium:1, Large:1} },
-    { sku:"WM-DJWORLD-19x15",   category:"Wash/Mover",  name:"DJ World Beam+Wash 19×15W RGBW Zoom", qty:2, rate:50, tags:["wash","motion"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"MH-BETOPPER-BEE",    category:"Moving Head", name:"Betopper Mini 7×40W RGBW Bee Eye Moving Head", qty:1, rate:50, tags:["motion","fx"], suggested:{Small:0, Medium:1, Large:1} },
 
-    { sku:"BL-DJWORLD-2EYES",   category:"Blinder/Key", name:"DJ World 2 Eyes 200W LED COB CCT (Warm/Cool)", qty:2, rate:50, tags:["key","punch"], suggested:{Small:0, Medium:1, Large:2} },
-    { sku:"PR-SHEHDS-LEKO350",  category:"Profiles",    name:"SHEHDS LED 350W Optical Zoom LEKO (Warm/Cool)", qty:1, rate:50, tags:["key","profile"], suggested:{Small:0, Medium:1, Large:1} },
+    { sku:"MB-BETOPPER-L1015",  category:"Moving Bar", name:"Betopper L1015 10×15W RGBW Moving Beam Bar", qty:2, rate:50, tags:["motion","bar","beam"], suggested:{Small:1, Medium:2, Large:2} },
 
-    { sku:"PAR-SHEHDS-18x18",   category:"Wash",        name:"SHEHDS 18×18W Flat Par (RGBAW/UV capable)", qty:4, rate:50, tags:["fill"], suggested:{Small:4, Medium:4, Large:4} },
-    { sku:"W-RF-WEDGE",         category:"Wash",        name:"RF WEDGE 54W RGBWA+UV", qty:4, rate:50, tags:["fill","uv"], suggested:{Small:4, Medium:4, Large:4} },
-    { sku:"PAR-MONOPRICE-UV",   category:"Wash",        name:"Monoprice PAR StageLight RGBAW-UV", qty:2, rate:50, tags:["fill","uv"], suggested:{Small:2, Medium:2, Large:2} },
-    { sku:"W-ROCKVILLE-STM36",  category:"Wash",        name:"Rockville STAGEMATRIX 36 RGB", qty:3, rate:50, tags:["fill"], suggested:{Small:3, Medium:3, Large:3} },
-    { sku:"FX-ROCKVILLE-ROCKBEAMDC", category:"Beam/FX", name:"Rockville RockBeam DC", qty:2, rate:50, tags:["beam","fx"], suggested:{Small:0, Medium:2, Large:2} },
-    { sku:"W-RIUKOE-PLW0124",   category:"Wash",        name:"RIUKOE PL-W0124 (wash fixture)", qty:2, rate:50, tags:["fill"], suggested:{Small:2, Medium:2, Large:2} },
+    { sku:"STROBE-SHEHDS-8SEG", category:"Pixel/Strobe", name:"SHEHDS / Mingjie MJ-STR-022 200W RGB 8-Segment Strobe", qty:8, rate:50, tags:["strobe","pixel","fx"], suggested:{Small:4, Medium:6, Large:8} },
+    { sku:"FX-OPPSK-STROBE",    category:"Strobe/FX", name:"OPPSK Stage Strobe", qty:2, rate:50, tags:["strobe","fx"], suggested:{Small:0, Medium:2, Large:2} },
+    { sku:"MATRIX-ROCKVILLE-STM36", category:"Pixel/Matrix", name:"Rockville STAGEMATRIX 36 RGB 6×6 Pixel Matrix", qty:3, rate:50, tags:["pixel","matrix","fx"], suggested:{Small:1, Medium:3, Large:3} },
 
-    { sku:"BAR-LALUCENATZ",     category:"Bars",        name:"LaluceNatz 40in 100W 12-LED RGB Light Bar", qty:2, rate:50, tags:["coverage"], suggested:{Small:1, Medium:2, Large:2} },
-    { sku:"BAR-OPPSK-120W",     category:"Bars",        name:"OPPSK 120W 36LED Light Bar", qty:2, rate:50, tags:["coverage"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"BAR-LALUCENATZ",     category:"Bars", name:"LaluceNatz 40in 100W 12-LED RGB Light Bar", qty:2, rate:50, tags:["coverage","bar"], suggested:{Small:1, Medium:2, Large:2} },
+    { sku:"BAR-OPPSK-120W",     category:"Bars", name:"OPPSK 120W 36LED Light Bar", qty:2, rate:50, tags:["coverage","bar"], suggested:{Small:1, Medium:2, Large:2} },
 
-    { sku:"FX-OPPSK-STROBE",    category:"FX",          name:"OPPSK Stage Strobe", qty:2, rate:50, tags:["fx"], suggested:{Small:0, Medium:2, Large:2} },
-    { sku:"FX-CHAUVET-1800",    category:"Atmosphere",  name:"Chauvet Hurricane 1800 Flex (Fog)", qty:1, rate:50, tags:["multiplier"], suggested:{Small:1, Medium:1, Large:1}, keepMin:1 },
+    { sku:"COB-BETOPPER-LC002HB", category:"COB / Front", name:"Betopper LC002-HB 200W COB LED PAR", qty:4, rate:50, tags:["front","cob","wash"], suggested:{Small:2, Medium:4, Large:4} },
+    { sku:"COB-SHEHDS-200W-ZOOM", category:"COB / Front", name:"SHEHDS 200W COB Zoom PAR Cool/Warm White with Barndoors", qty:2, rate:50, tags:["front","cob","zoom"], suggested:{Small:2, Medium:2, Large:2} },
+    { sku:"BL-DJWORLD-2EYES",   category:"Blinder/Key", name:"DJ World 2 Eyes 200W LED COB CCT (Warm/Cool)", qty:2, rate:50, tags:["key","punch","cob"], suggested:{Small:0, Medium:1, Large:2} },
+    { sku:"PR-SHEHDS-LEKO350",  category:"Profile / Followspot", name:"SHEHDS LED 350W Optical Zoom LEKO used as Followspot", qty:1, rate:50, tags:["key","profile","followspot"], suggested:{Small:0, Medium:1, Large:1} },
+
+    { sku:"PAR-SHEHDS-18x18",   category:"Wash", name:"SHEHDS 18×18W Aluminum Alloy LED Flat PAR", qty:4, rate:50, tags:["wash","fill"], suggested:{Small:4, Medium:4, Large:4} },
+    { sku:"W-RF-WEDGE",         category:"Wash", name:"RF WEDGE 54W RGBWA+UV", qty:4, rate:50, tags:["wash","fill","uv"], suggested:{Small:4, Medium:4, Large:4} },
+    { sku:"PAR-MONOPRICE-UV",   category:"Wash", name:"Monoprice PAR StageLight RGBAW-UV", qty:2, rate:50, tags:["wash","uv"], suggested:{Small:2, Medium:2, Large:2} },
+    { sku:"W-RIUKOE-PLW0124",   category:"Wash", name:"RIUKOE PL-W0124 Wash Fixture", qty:2, rate:50, tags:["wash","fill"], suggested:{Small:2, Medium:2, Large:2} },
+
+    { sku:"FX-CHAUVET-1800",    category:"Atmosphere", name:"Chauvet Hurricane 1800 Flex Fogger", qty:1, rate:50, tags:["atmosphere","fog","multiplier"], suggested:{Small:1, Medium:1, Large:1}, keepMin:1 },
   ];
 
   let state = {
@@ -361,15 +367,15 @@
   };
 
   // ---- Storage ----
-  function loadLog(){ try{ const raw=localStorage.getItem("ln268_log_xcd_profit_targets_flat50_profit_targets_rates"); state.log = raw?JSON.parse(raw):[]; }catch{ state.log=[]; } }
-  function saveLog(){ localStorage.setItem("ln268_log_xcd_profit_targets_flat50_profit_targets_rates", JSON.stringify(state.log)); }
+  function loadLog(){ try{ const raw=localStorage.getItem("ln268_log_xcd_flat50_corrected_inventory_v2"); state.log = raw?JSON.parse(raw):[]; }catch{ state.log=[]; } }
+  function saveLog(){ localStorage.setItem("ln268_log_xcd_flat50_corrected_inventory_v2", JSON.stringify(state.log)); }
 
-  function loadFixtureOverrides(){ try{ const raw=localStorage.getItem("ln268_fixture_overrides_xcd_profit_targets_flat50_profit_targets_rates"); return raw?JSON.parse(raw):{}; }catch{ return {}; } }
-  function saveFixtureOverrides(o){ localStorage.setItem("ln268_fixture_overrides_xcd_profit_targets_flat50_profit_targets_rates", JSON.stringify(o)); }
-  function resetFixtureOverrides(){ localStorage.removeItem("ln268_fixture_overrides_xcd_profit_targets_flat50_profit_targets_rates"); }
+  function loadFixtureOverrides(){ try{ const raw=localStorage.getItem("ln268_fixture_overrides_xcd_flat50_corrected_inventory_v2"); return raw?JSON.parse(raw):{}; }catch{ return {}; } }
+  function saveFixtureOverrides(o){ localStorage.setItem("ln268_fixture_overrides_xcd_flat50_corrected_inventory_v2", JSON.stringify(o)); }
+  function resetFixtureOverrides(){ localStorage.removeItem("ln268_fixture_overrides_xcd_flat50_corrected_inventory_v2"); }
 
-  function loadDc(){ try{ const raw=localStorage.getItem("ln268_dc_xcd_profit_targets_flat50_profit_targets_rates"); return raw?JSON.parse(raw):null; }catch{ return null; } }
-  function saveDc(){ localStorage.setItem("ln268_dc_xcd_profit_targets_flat50_profit_targets_rates", JSON.stringify(state.dc)); }
+  function loadDc(){ try{ const raw=localStorage.getItem("ln268_dc_xcd_flat50_corrected_inventory_v2"); return raw?JSON.parse(raw):null; }catch{ return null; } }
+  function saveDc(){ localStorage.setItem("ln268_dc_xcd_flat50_corrected_inventory_v2", JSON.stringify(state.dc)); }
 
   // ---- Rules / init ----
   function computeTier(budget){ for(const t of RULES.tiers){ if(budget<=t.maxBudget) return t.name; } return "Large"; }
