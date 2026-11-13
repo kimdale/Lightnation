@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="GigLedger tracks bookings, client receipts, personal earnings, crew payouts, expenses and balances in XCD and USD.">
+  <title>GigLedger — Gig payments, organized</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./finance.js"></script>
+  <script defer src="./cloud.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#dashboard" aria-label="GigLedger dashboard"><span class="brand-icon">G<span>·</span></span><span>GigLedger<small>YOUR GIG FINANCES</small></span></a>
+      <nav class="main-nav">
+        <button type="button" data-view="dashboard" class="nav active"><span>◫</span> Overview</button>
+        <button type="button" data-view="gigs" class="nav"><span>▤</span> Gigs & bookings</button>
+        <button type="button" data-view="payments" class="nav"><span>⇄</span> Payment history</button>
+        <button type="button" data-view="reports" class="nav"><span>▥</span> Reports</button>
+        <button type="button" data-view="settings" class="nav"><span>⚙</span> Settings & backups</button>
+      </nav>
+      <div class="sidebar-foot">Private finance workspace<br><span id="storageLabel">Saved in this browser</span></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="mobile-brand">GigLedger</div>
+        <div class="crumb" id="breadcrumbs">Overview <span> / Financial snapshot</span></div>
+        <div class="top-actions">
+          <div class="segmented" role="group" aria-label="Display currency"><button class="currency active" data-currency="XCD">XCD</button><button class="currency" data-currency="USD">USD</button></div>
+          <button class="primary" id="newGigBtn">+ New gig</button>
+        </div>
+      </header>
+      <div class="content">
+        <section id="dashboardView" class="view active" aria-labelledby="dashboardHeading">
+          <div class="page-head"><div><div class="eyebrow">YOUR FINANCIAL OVERVIEW</div><h1 id="dashboardHeading">Know where every dollar goes.</h1><p>Keep the client balance, your earnings, and crew obligations in one place.</p></div><span id="todayTag" class="date-tag"></span></div>
+          <div class="stat-grid" id="dashboardStats"></div>
+          <div class="two-col">
+            <div class="panel"><div class="panel-head"><div><h2>Upcoming gigs</h2><p>Bookings on your calendar</p></div><button class="link-btn" data-route="gigs">See all →</button></div><div id="upcomingList"></div></div>
+            <div class="panel"><div class="panel-head"><div><h2>Unsettled gigs</h2><p>Money still coming in or going out</p></div></div><div id="attentionList"></div></div>
+          </div>
+          <div class="panel"><div class="panel-head"><div><h2>Recent payment activity</h2><p>Client income, crew payouts, your pay, and expenses</p></div><button class="link-btn" data-route="payments">View history →</button></div><div id="recentPayments"></div></div>
+        </section>
+        <section id="gigsView" class="view" aria-labelledby="gigsHeading">
+          <div class="page-head"><div><div class="eyebrow">GIG MANAGEMENT</div><h1 id="gigsHeading">Every booking. Every payment.</h1><p>Record a gig whether you booked it yourself or another organizer hired you.</p></div></div>
+          <div class="panel filters"><label>Search <input id="gigSearch" type="search" placeholder="Title, client, venue, role"></label><label>Status <select id="gigStatusFilter"><option value="">All statuses</option><option value="planned">Planned</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label><label>Order <select id="gigOrder"><option value="date-desc">Newest date</option><option value="date-asc">Oldest date</option><option value="outstanding">Largest outstanding</option></select></label></div>
+          <div id="gigList" class="gig-list"></div>
+        </section>
+        <section id="detailView" class="view" aria-labelledby="detailHeading"><div id="detailContent"></div></section>
+        <section id="paymentsView" class="view" aria-labelledby="paymentsHeading">
+          <div class="page-head"><div><div class="eyebrow">MONEY TRAIL</div><h1 id="paymentsHeading">Payment history</h1><p>Every recorded movement with the gig it belongs to.</p></div></div>
+          <div class="panel filters"><label>Type <select id="paymentType"><option value="">All types</option><option>Client receipt</option><option>Self payout</option><option>Crew payout</option><option>Expense</option></select></label><label>Search <input id="paymentSearch" type="search" placeholder="Gig, payer or payee"></label></div>
+          <div id="paymentHistory" class="panel table-panel"></div>
+        </section>
+        <section id="reportsView" class="view" aria-labelledby="reportsHeading">
+          <div class="page-head"><div><div class="eyebrow">REPORTING</div><h1 id="reportsHeading">A clearer picture of your gigs</h1><p>Currency-specific totals. No misleading XCD/USD mixing.</p></div></div>
+          <div id="reportSummary"></div>
+          <div class="panel"><div class="panel-head"><div><h2>Gig-level breakdown</h2><p>All non-cancelled gigs in the selected currency</p></div><button id="exportGigsCsv" class="secondary">Download gigs CSV</button></div><div id="reportTable" class="table-scroll"></div></div>
+          <div class="panel"><div class="panel-head"><div><h2>Transaction export</h2><p>Receipts, payouts, and costs for bookkeeping</p></div><button id="exportTransactionsCsv" class="secondary">Download transactions CSV</button></div></div>
+        </section>
+        <section id="settingsView" class="view" aria-labelledby="settingsHeading">
+          <div class="page-head"><div><div class="eyebrow">YOUR DATA</div><h1 id="settingsHeading">Settings & backups</h1><p>Control where your records are stored and download a full backup.</p></div></div>
+          <div class="settings-grid">
+            <div class="panel"><h2>Backup and restore</h2><p>Download all gigs and payments as JSON. Keep a copy somewhere safe.</p><div class="button-row"><button class="primary" id="exportJson">Export full backup</button><label for="importJson" class="secondary file-label">Import JSON backup</label><input id="importJson" type="file" accept=".json,application/json" hidden></div><div class="help">Import replaces the current records after confirmation. CSV exports are in Reports.</div></div>
+            <div class="panel"><h2>Optional private cloud sync</h2><p>Use your own Supabase project for email sign-in and encrypted-in-transit synchronization across devices. Without setup, the app works locally.</p><div class="form-stack"><label>Supabase project URL <input id="supabaseUrl" type="url" placeholder="https://YOUR-PROJECT.supabase.co" autocomplete="off"></label><label>Supabase publishable/anon key <input id="supabaseKey" type="password" placeholder="Publishable or anon key" autocomplete="off"></label><button class="secondary" id="saveCloudConfig">Save cloud configuration</button><div class="divider"></div><label>Email <input id="cloudEmail" type="email" autocomplete="username" placeholder="you@example.com"></label><label>Password <input id="cloudPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"></label><div class="button-row"><button class="primary" id="cloudSignIn">Sign in</button><button class="secondary" id="cloudSignUp">Create account</button><button class="danger-ghost" id="cloudSignOut">Sign out</button></div><div id="cloudStatus" class="help" aria-live="polite">Local mode</div></div></div>
+          </div>
+          <div class="panel warning-panel"><h2>Data safety</h2><p>Local mode saves to this browser only, not your GitHub repository or other devices. Back it up regularly. To enable cloud sync, run <code>supabase/schema.sql</code> in your own Supabase project before signing in. Only the publishable/anon key belongs in the browser; never paste a service-role key. Cloud sync uses last-write-wins, so avoid simultaneously editing on two devices.</p><button class="danger-ghost" id="clearData">Erase all local gig records</button></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="gigDialog" class="modal"><form id="gigForm" novalidate>
+    <div class="modal-top"><div><div class="eyebrow">BOOKING DETAILS</div><h2 id="gigModalTitle">New gig</h2></div><button type="button" class="close" data-close="gigDialog" aria-label="Close">×</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <label class="wide">Gig / event name <input name="title" maxlength="140" required placeholder="e.g. Hotel duo performance"></label>
+      <label>Event date <input name="date" type="date" required></label>
+      <label>Payment due date <input name="dueDate" type="date"></label>
+      <label>Client / organizer <input name="client" maxlength="140" placeholder="Who pays you?"></label>
+      <label>Venue <input name="venue" maxlength="140"></label>
+      <label>Service / role <input name="role" maxlength="140" placeholder="Lighting, keys, sound…"></label>
+      <label>Booking type <select name="bookingType"><option value="mine">My booking / production</option><option value="hired">Hired by someone else</option></select></label>
+      <label>Status <select name="status"><option value="planned">Planned</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></label>
+      <label>Currency <select name="currency"><option value="XCD">XCD</option><option value="USD">USD</option></select></label>
+      <label>Agreed client fee <input name="fee" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" required></label>
+      <label>My agreed share / pay <input name="selfFee" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" required></label>
+      <label class="wide">Notes <textarea name="notes" rows="3" maxlength="3000" placeholder="Agreement, contact info, reminders…"></textarea></label>
+    </div><p class="help">The agreed fee is what the client owes for this gig. Your share is the amount allocated to you. Record client receipts and your payouts separately; receipts paid directly to you count toward your pay automatically.</p></div>
+    <div class="modal-actions"><button type="button" class="secondary" data-close="gigDialog">Cancel</button><button type="submit" class="primary">Save gig</button></div>
+  </form></dialog>
+
+  <dialog id="entryDialog" class="modal"><form id="entryForm" novalidate>
+    <div class="modal-top"><div><div class="eyebrow">PAYMENT ENTRY</div><h2 id="entryTitle">Record payment</h2></div><button type="button" class="close" data-close="entryDialog" aria-label="Close">×</button></div>
+    <div class="modal-body" id="entryFields"></div>
+    <div class="modal-actions"><button type="button" class="secondary" data-close="entryDialog">Cancel</button><button type="submit" class="primary">Save entry</button></div>
+  </form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
