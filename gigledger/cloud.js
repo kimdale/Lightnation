@@ -6,7 +6,7 @@
     if (root.supabase?.createClient) return Promise.resolve(root.supabase);
     if (!sdkPromise) sdkPromise = new Promise((resolve,reject)=>{
       const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js';
+      s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js';
       s.onload=()=>root.supabase?.createClient ? resolve(root.supabase) : reject(new Error('Cloud SDK unavailable'));
       s.onerror=()=>reject(new Error('Unable to load cloud SDK. Check internet access.'));
       document.head.append(s);
