@@ -26,7 +26,11 @@
       return this.user;
     }
     async signIn(email,password){const {data,error}=await this.client.auth.signInWithPassword({email,password});if(error)throw error;this.user=data.user;return data.user;}
-    async signUp(email,password){const {data,error}=await this.client.auth.signUp({email,password});if(error)throw error;this.user=data.session?.user||null;return data;}
+    async signUp(email,password){
+      const options=location.protocol==='https:' ? {emailRedirectTo:location.origin+location.pathname} : {};
+      const {data,error}=await this.client.auth.signUp({email,password,options});
+      if(error)throw error;this.user=data.session?.user||null;return data;
+    }
     async signOut(){if(this.client){const {error}=await this.client.auth.signOut();if(error)throw error;}this.user=null;}
     async load(){
       if(!this.user)throw new Error('Sign in before syncing.');

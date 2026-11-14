@@ -4,6 +4,12 @@
   const F = window.GigFinance;
   const KEY = 'gigledger-data-v1';
   const CLOUD_KEY = 'gigledger-cloud-config-v1';
+  const DEFAULT_CLOUD = Object.freeze({url:"https://ybulpbjlabetlyabaand.supabase.co",key:"sb_publishable_hcBdgss_NgEtuON4K0M1eg_qi-2dvqz"});
+  function readCloudConfig(){
+    let stored={};
+    try{stored=JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}')||{};}catch{}
+    return {...DEFAULT_CLOUD,...stored};
+  }
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const uuid = () => (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -125,7 +131,7 @@
     const rows=state.gigs.filter(g=>g.currency===activeCurrency&&g.status!=='cancelled').sort((a,b)=>b.date.localeCompare(a.date)).map(g=>{const t=F.totals(g),m=v=>fmt(v,g.currency);return `<tr><td><button class="link-btn" data-action="view-gig" data-id="${e(g.id)}">${e(g.title)}</button><div class="muted">${e(formatDate(g.date))}</div></td>${[t.fee,t.received,t.receivable,t.selfOwed,t.crewOwed,t.expenses,t.margin].map(v=>`<td class="amount">${e(m(v))}</td>`).join('')}</tr>`;});
     $('#reportTable').innerHTML=table(['Gig','Fee','Received','Client due','My unpaid pay','Crew owed','Expenses','Margin'],rows);
   }
-  function renderSettings(){let cfg={};try{cfg=JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}');}catch{}$('#supabaseUrl').value=cfg.url||'';$('#supabaseKey').value=cfg.key||'';$('#cloudSignOut').disabled=!cloud?.user;if(cloud?.user)setSyncText(`Signed in: ${cloud.user.email}`);}
+  function renderSettings(){const cfg=readCloudConfig();$('#supabaseUrl').value=cfg.url||'';$('#supabaseKey').value=cfg.key||'';$('#cloudSignOut').disabled=!cloud?.user;if(cloud?.user)setSyncText(`Signed in: ${cloud.user.email}`);}
 
   function openGig(id){
     editingGigId=id||null;const g=id?state.gigs.find(x=>x.id===id):null,form=$('#gigForm');form.reset();$('#gigModalTitle').textContent=g?'Edit gig':'New gig';
@@ -211,14 +217,22 @@
   function exportTransactions(){const headings=['Transaction ID','Date','Gig ID','Gig','Currency','Type','Party','Method','Destination','Amount','Note'];const rows=F.ledger(state.gigs).filter(p=>p.currency===activeCurrency).map(p=>[p.id,p.date,p.gigId,p.gigTitle,p.currency,p.type,p.party,p.method,p.destination,dec(p.amountCents),p.note]);download(`gigledger-payments-${activeCurrency}.csv`,[csvRow(headings),...rows.map(csvRow)].join('\r\n'),'text/csv;charset=utf-8');}
   async function importBackup(file){if(!file)return;try{if(file.size>15*1024*1024)throw new Error('Backup larger than 15 MB.');const parsed=normalize(JSON.parse(await file.text()));if(!confirm(`Replace all current gigs with ${parsed.gigs.length} gigs from this backup?`))return;state=parsed;save();go('dashboard');toast('Backup imported successfully.');}catch(err){toast('Import failed: '+err.message);}finally{$('#importJson').value='';}}
 
-  async function initCloud(){let cfg={};try{cfg=JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}');}catch{}if(!cfg.url||!cfg.key)return;try{cloud=new GigCloud();const user=await cloud.init(cfg.url,cfg.key);if(user)await onCloudSignedIn();else setSyncText('Cloud configured; please sign in.');}catch(err){setSyncText('Cloud unavailable: '+err.message);}}
+  async function initCloud(){const cfg=readCloudConfig();if(!cfg.url||!cfg.key)return;try{cloud=new GigCloud();const user=await cloud.init(cfg.url,cfg.key);if(user)await onCloudSignedIn();else setSyncText('Cloud configured; please sign in.');}catch(err){setSyncText('Cloud unavailable: '+err.message);}}
   async function onCloudSignedIn(){const remote=await cloud.load();if(remote){const normalized=normalize(remote);if(state.gigs.length&&normalized.gigs.length&&JSON.stringify(state)!==JSON.stringify(normalized)){
-      if(confirm('Cloud data and local records differ. OK: use cloud data here. Cancel: upload your current local data to cloud.')){state=normalized;localStorage.setItem(KEY,JSON.stringify(state));}else await cloud.save(state);
+      if(confirm('This device has different gig records from the cloud. Press OK to use the cloud records on this device, or Cancel to keep your local records and disconnect without overwriting anything. Export a backup first if unsure.')){
+        const oldBackup=JSON.stringify(state);
+        try{localStorage.setItem('gigledger-pre-cloud-backup-'+Date.now(),oldBackup);}catch{}
+        state=normalized;localStorage.setItem(KEY,JSON.stringify(state));
+      }else{
+        await cloud.signOut();
+        setSyncText('Cloud sync paused: local records differ. Both copies preserved.');
+        render();return;
+      }
     }else if(!state.gigs.length){state=normalized;localStorage.setItem(KEY,JSON.stringify(state));}else if(!normalized.gigs.length)await cloud.save(state);
     }else await cloud.save(state);
     setSyncText(`Signed in: ${cloud.user.email} · Synced`);render();
   }
-  async function cloudCredentials(){const email=$('#cloudEmail').value.trim(),password=$('#cloudPassword').value;if(!email||!password)throw new Error('Enter your email and password.');let cfg={};try{cfg=JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}');}catch{}if(!cfg.url||!cfg.key)throw new Error('Save your Supabase configuration first.');if(!cloud?.client){cloud=new GigCloud();await cloud.init(cfg.url,cfg.key);}return{email,password};}
+  async function cloudCredentials(){const email=$('#cloudEmail').value.trim(),password=$('#cloudPassword').value;if(!email||!password)throw new Error('Enter your email and password.');const cfg=readCloudConfig();if(!cfg.url||!cfg.key)throw new Error('Cloud configuration unavailable.');if(!cloud?.client){cloud=new GigCloud();await cloud.init(cfg.url,cfg.key);}return{email,password};}
   async function cloudAction(type){try{const {email,password}=await cloudCredentials();if(type==='signIn'){await cloud.signIn(email,password);await onCloudSignedIn();toast('Signed in and cloud data loaded.');}else{const data=await cloud.signUp(email,password);if(data.session){await onCloudSignedIn();toast('Account created.');}else setSyncText('Check your email to confirm the account, then sign in.');}}catch(err){setSyncText('Cloud error: '+err.message);toast(err.message);}}
   document.addEventListener('click',ev=>{
     const route=ev.target.closest('[data-route]');if(route){go(route.dataset.route);return;}
